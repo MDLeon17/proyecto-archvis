@@ -1,9 +1,12 @@
 {
-    "nombre_usuario": "Fernando Mendez",
+    "nombre_usuario": "Fernando",
+    "rol_usuario": "Administrador",
+    "biografia": "Usuario del Sistema de Personalización",
     "tema_interfaz": "oscuro",
-    "idioma": "en",
-    "tamaño_fuente": 12,
+    "idioma": "es",
+    "tamaño_fuente": 11,
+    "color_botones": "#2563eb",
     "color_barra_menu": "#1e293b",
     "color_letra": "#f8fafc",
-    "foto_perfil": ""
+    "foto_perfil": "C:/Users/fnand/OneDrive/Fotos/Camera Roll/WIN_20260921_10_27_14_Pro.jpg"
 }

@@ -1,8 +1,11 @@
 {
-    "nombre_usuario": "Fernando Mendez",
+    "nombre_usuario": "Fernando",
+    "rol_usuario": "Administrador",
+    "biografia": "Usuario del Sistema de Personalización",
     "tema_interfaz": "oscuro",
     "idioma": "es",
-    "tamaño_fuente": 12,
+    "tamaño_fuente": 11,
+    "color_botones": "#2563eb",
     "color_barra_menu": "#1e293b",
     "color_letra": "#f8fafc",
     "foto_perfil": ""
