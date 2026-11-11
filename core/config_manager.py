@@ -10,10 +10,13 @@ import shutil
 from typing import Dict, Any, Tuple, Optional
 
 DEFAULT_CONFIG: Dict[str, Any] = {
-    "nombre_usuario": "Operador",
+    "nombre_usuario": "Fernando",
+    "rol_usuario": "Administrador",
+    "biografia": "Usuario del Sistema de Personalización",
     "tema_interfaz": "oscuro",      # 'claro' o 'oscuro'
     "idioma": "es",                 # 'es' o 'en'
     "tamaño_fuente": 11,            # número entero
+    "color_botones": "#2563eb",     # Color de botones principales
     "color_barra_menu": "#1e293b",   # Color de la barra lateral/menú
     "color_letra": "#f8fafc",        # Color de letra general
     "foto_perfil": ""                # Ruta a archivo de imagen
@@ -77,6 +80,9 @@ class ConfigManager:
 
                 if merged.get("idioma") not in ("es", "en"):
                     merged["idioma"] = "es"
+
+                if not merged.get("color_botones"):
+                    merged["color_botones"] = "#2563eb"
 
                 return merged
 

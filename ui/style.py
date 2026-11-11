@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 Generador dinámico de estilos QSS para temas Claro y Oscuro.
-Calcula automáticamente el contraste de la tipografía y de la barra lateral
-para evitar textos invisibles (ej. letras blancas sobre fondos claros).
+Permite personalizar el color de botones, color de barra lateral,
+color de letra y tamaño de fuente con contraste garantizado.
 """
 
 from PyQt6.QtGui import QColor
 
 def is_color_dark(hex_str: str) -> bool:
-    """Calcula si un color es oscuro utilizando luminancia relativa."""
+    """Calcula si un color es oscuro utilizando luminancia relativa estándar."""
     try:
         c = QColor(hex_str)
         if not c.isValid():
@@ -18,10 +18,38 @@ def is_color_dark(hex_str: str) -> bool:
     except Exception:
         return True
 
-def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_color: str = "", font_color: str = "") -> str:
+def adjust_brightness(hex_str: str, factor: float) -> str:
+    """Ajusta el brillo de un color hexadecimal por un factor multiplicador."""
+    try:
+        c = QColor(hex_str)
+        if not c.isValid():
+            return hex_str
+        r = min(255, max(0, int(c.red() * factor)))
+        g = min(255, max(0, int(c.green() * factor)))
+        b = min(255, max(0, int(c.blue() * factor)))
+        return QColor(r, g, b).name()
+    except Exception:
+        return hex_str
+
+def generate_stylesheet(
+    theme: str = "oscuro",
+    font_size: int = 11,
+    sidebar_color: str = "",
+    font_color: str = "",
+    button_color: str = "#2563eb"
+) -> str:
     is_dark = (theme.lower() == "oscuro")
 
-    # 1. Paleta de colores para el área de contenido principal
+    # 1. Normalizar color de botones
+    if not button_color or not QColor(button_color).isValid():
+        button_color = "#2563eb"
+
+    btn_is_dark = is_color_dark(button_color)
+    btn_text = "#ffffff" if btn_is_dark else "#0f172a"
+    btn_hover = adjust_brightness(button_color, 0.88 if btn_is_dark else 1.12)
+    btn_pressed = adjust_brightness(button_color, 0.75 if btn_is_dark else 1.25)
+
+    # 2. Paleta de colores para el área de contenido principal
     if is_dark:
         bg_main = "#0f172a"
         bg_card = "#1e293b"
@@ -30,8 +58,6 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         input_bg = "#0f172a"
         input_border = "#475569"
         hover_bg = "#334155"
-        table_row_alt = "#162032"
-        table_selected = "#2563eb"
         text_secondary = "#94a3b8"
 
         # Tipografía en modo oscuro: si font_color es oscuro, forzar blanco para contraste
@@ -47,9 +73,7 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         input_bg = "#ffffff"
         input_border = "#94a3b8"
         hover_bg = "#e2e8f0"
-        table_row_alt = "#f1f5f9"
-        table_selected = "#2563eb"
-        text_secondary = "#475569"
+        text_secondary = "#64748b"
 
         # Tipografía en modo claro: si font_color es claro o blanco, forzar oscuro para contraste
         if font_color and is_color_dark(font_color):
@@ -57,37 +81,31 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         else:
             text_primary = "#0f172a"
 
-    # 2. Contraste de la barra lateral (Sidebar)
+    # 3. Contraste de la barra lateral (Sidebar)
     if is_dark:
-        # En modo oscuro: el fondo de la barra lateral debe ser oscuro.
-        # Si no se configuró o es un color claro (remanente de modo claro), usar #1e293b.
         if not sidebar_color or not is_color_dark(sidebar_color):
             s_bg = "#1e293b"
         else:
             s_bg = sidebar_color
 
-        # En modo oscuro, la tipografía del sidebar SIEMPRE debe ser blanca y nítida
         sidebar_text = "#ffffff"
         sidebar_text_muted = "rgba(255, 255, 255, 0.70)"
-        sidebar_hover = "rgba(255, 255, 255, 0.15)"
-        sidebar_active = "rgba(255, 255, 255, 0.28)"
+        sidebar_hover = "rgba(255, 255, 255, 0.12)"
+        sidebar_active = "rgba(255, 255, 255, 0.22)"
         sidebar_border = "#334155"
-        sidebar_accent = "#38bdf8"
+        sidebar_accent = button_color
     else:
-        # En modo claro: el fondo de la barra lateral debe ser claro.
-        # Si no se configuró o es un color oscuro (remanente de modo oscuro), usar #f1f5f9.
         if not sidebar_color or is_color_dark(sidebar_color):
             s_bg = "#f1f5f9"
         else:
             s_bg = sidebar_color
 
-        # En modo claro, la tipografía del sidebar SIEMPRE debe ser oscura y nítida
         sidebar_text = "#0f172a"
         sidebar_text_muted = "rgba(15, 23, 42, 0.70)"
         sidebar_hover = "rgba(0, 0, 0, 0.08)"
         sidebar_active = "rgba(0, 0, 0, 0.16)"
         sidebar_border = "#cbd5e1"
-        sidebar_accent = "#2563eb"
+        sidebar_accent = button_color
 
     qss = f"""
     * {{
@@ -128,7 +146,7 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         background-color: transparent;
         color: {sidebar_text};
         text-align: left;
-        padding: 10px 16px;
+        padding: 12px 18px;
         border: none;
         border-radius: 8px;
         font-weight: 500;
@@ -148,7 +166,7 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         border-left: 4px solid {sidebar_accent};
     }}
 
-    /* Tarjetas / Contenedores */
+    /* Tarjetas y Paneles */
     QFrame.card {{
         background-color: {bg_card};
         border: 1px solid {border_color};
@@ -160,46 +178,46 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         background-color: {bg_card_alt};
         border: 1px solid {border_color};
         border-radius: 10px;
-        padding: 12px;
+        padding: 14px;
     }}
 
     /* Controles de Entrada */
-    QLineEdit, QComboBox, QSpinBox, QDateEdit, QTimeEdit, QTextEdit {{
+    QLineEdit, QComboBox, QSpinBox, QTextEdit {{
         background-color: {input_bg};
         border: 1.5px solid {input_border};
-        border-radius: 6px;
-        padding: 8px 10px;
+        border-radius: 8px;
+        padding: 8px 12px;
         color: {text_primary};
-        selection-background-color: #2563eb;
+        selection-background-color: {button_color};
     }}
 
-    QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDateEdit:focus, QTimeEdit:focus, QTextEdit:focus {{
-        border: 1.5px solid #3b82f6;
+    QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QTextEdit:focus {{
+        border: 1.5px solid {button_color};
     }}
 
-    QComboBox::drop-down, QDateEdit::drop-down, QTimeEdit::drop-down {{
+    QComboBox::drop-down {{
         subcontrol-origin: padding;
         subcontrol-position: top right;
         width: 25px;
         border-left-width: 0px;
     }}
 
-    /* Botones Estándar */
+    /* Botones Estándar - Personalizados con Color de Botones */
     QPushButton {{
-        background-color: #2563eb;
-        color: #ffffff;
+        background-color: {button_color};
+        color: {btn_text};
         border: none;
-        border-radius: 6px;
-        padding: 8px 16px;
+        border-radius: 8px;
+        padding: 9px 18px;
         font-weight: 600;
     }}
 
     QPushButton:hover {{
-        background-color: #1d4ed8;
+        background-color: {btn_hover};
     }}
 
     QPushButton:pressed {{
-        background-color: #1e40af;
+        background-color: {btn_pressed};
     }}
 
     QPushButton:disabled {{
@@ -208,6 +226,15 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
     }}
 
     /* Variantes de Botones */
+    QPushButton.btn-secondary {{
+        background-color: {hover_bg};
+        color: {text_primary};
+        border: 1px solid {input_border};
+    }}
+    QPushButton.btn-secondary:hover {{
+        background-color: {input_border};
+    }}
+
     QPushButton.btn-success {{
         background-color: #059669;
         color: #ffffff;
@@ -222,44 +249,6 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
     }}
     QPushButton.btn-danger:hover {{
         background-color: #b91c1c;
-    }}
-
-    QPushButton.btn-warning {{
-        background-color: #d97706;
-        color: #ffffff;
-    }}
-    QPushButton.btn-warning:hover {{
-        background-color: #b45309;
-    }}
-
-    QPushButton.btn-secondary {{
-        background-color: {hover_bg};
-        color: {text_primary};
-        border: 1px solid {input_border};
-    }}
-    QPushButton.btn-secondary:hover {{
-        background-color: {input_border};
-    }}
-
-    /* Tablas */
-    QTableWidget {{
-        background-color: {bg_card};
-        alternate-background-color: {table_row_alt};
-        gridline-color: {border_color};
-        border: 1px solid {border_color};
-        border-radius: 8px;
-        color: {text_primary};
-        selection-background-color: {table_selected};
-        selection-color: #ffffff;
-    }}
-
-    QHeaderView::section {{
-        background-color: {bg_card_alt};
-        color: {text_secondary};
-        font-weight: 600;
-        padding: 8px;
-        border: none;
-        border-bottom: 2px solid {border_color};
     }}
 
     /* Scrollbars */
@@ -277,7 +266,7 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
         height: 0px;
     }}
 
-    /* Etiquetas de Texto */
+    /* Tipografía y Títulos */
     QLabel.heading-1 {{
         font-size: {font_size + 6}pt;
         font-weight: bold;
@@ -293,6 +282,15 @@ def generate_stylesheet(theme: str = "oscuro", font_size: int = 11, sidebar_colo
     QLabel.subtitle {{
         font-size: {font_size - 0.5}pt;
         color: {text_secondary};
+    }}
+
+    QLabel.badge {{
+        background-color: {button_color};
+        color: {btn_text};
+        border-radius: 12px;
+        padding: 4px 12px;
+        font-weight: 600;
+        font-size: {font_size - 1}pt;
     }}
     """
     return qss
